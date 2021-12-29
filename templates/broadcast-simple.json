@@ -1,0 +1,139 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "logicapp_name": {
+            "defaultValue": "",
+            "type": "String"
+        },
+        "messaging_api_channel_id": {
+            "defaultValue": "",
+            "type": "SecureString"
+        },
+        "messaging_api_channel_secret": {
+            "defaultValue": "",
+            "type": "SecureString"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('logicapp_name')]",
+            "location": "japaneast",
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "messaging_api_channel_id": {
+                            "defaultValue": "",
+                            "type": "SecureString"
+                        },
+                        "messaging_api_channel_secret": {
+                            "defaultValue": "",
+                            "type": "SecureString"
+                        }
+                    },
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "method": "POST",
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "actions": {
+                        "ブロードキャストメッセージ送信": {
+                            "runAfter": {
+                                "チャネルアクセストークン発行のレスポンス（JSON）の解析": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Http",
+                            "inputs": {
+                                "body": {
+                                    "messages": [
+                                        {
+                                            "text": "Hello, world!",
+                                            "type": "text"
+                                        }
+                                    ]
+                                },
+                                "headers": {
+                                    "Authorization": "Bearer @{body('チャネルアクセストークン発行のレスポンス（JSON）の解析')?['access_token']}",
+                                    "Content-Type": "application/json"
+                                },
+                                "method": "POST",
+                                "uri": "https://api.line.me/v2/bot/message/broadcast"
+                            }
+                        },
+                        "チャネルアクセストークンの発行": {
+                            "runAfter": {},
+                            "type": "Http",
+                            "inputs": {
+                                "method": "POST",
+                                "queries": {
+                                    "client_id": "@parameters('messaging_api_channel_id')",
+                                    "client_secret": "@parameters('messaging_api_channel_secret')",
+                                    "grant_type": "client_credentials"
+                                },
+                                "uri": "https://api.line.me/v2/oauth/accessToken"
+                            }
+                        },
+                        "チャネルアクセストークン発行のレスポンス（JSON）の解析": {
+                            "runAfter": {
+                                "チャネルアクセストークンの発行": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ParseJson",
+                            "inputs": {
+                                "content": "@body('チャネルアクセストークンの発行')",
+                                "schema": {
+                                    "properties": {
+                                        "access_token": {
+                                            "type": "string"
+                                        },
+                                        "expires_in": {
+                                            "type": "integer"
+                                        },
+                                        "token_type": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "応答": {
+                            "runAfter": {
+                                "ブロードキャストメッセージ送信": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Response",
+                            "kind": "Http",
+                            "inputs": {
+                                "statusCode": 200
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "messaging_api_channel_id": {
+                        "value": "[parameters ('messaging_api_channel_id') ]"
+                    },
+                    "messaging_api_channel_secret": {
+                        "value": "[parameters ('messaging_api_channel_secret') ]"
+                    }
+                }
+            }
+        }
+    ]
+}
