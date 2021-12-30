@@ -3,15 +3,12 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "logicapp_name": {
-            "defaultValue": "",
             "type": "String"
         },
         "messaging_api_channel_id": {
-            "defaultValue": "",
             "type": "SecureString"
         },
         "messaging_api_channel_secret": {
-            "defaultValue": "",
             "type": "SecureString"
         }
     },
@@ -29,11 +26,9 @@
                     "contentVersion": "1.0.0.0",
                     "parameters": {
                         "messaging_api_channel_id": {
-                            "defaultValue": "",
                             "type": "SecureString"
                         },
                         "messaging_api_channel_secret": {
-                            "defaultValue": "",
                             "type": "SecureString"
                         }
                     },
