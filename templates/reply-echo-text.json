@@ -26,31 +26,113 @@
                     "actions": {
                         "For_each": {
                             "actions": {
-                                "Reply_メッセージ送信": {
-                                    "inputs": {
-                                        "body": {
-                                            "messages": [
-                                                {
-                                                    "text": "@{items('For_each')?['message']?['text']}",
-                                                    "type": "text"
+                                "条件": {
+                                    "actions": {
+                                        "Reply_メッセージ送信": {
+                                            "inputs": {
+                                                "body": "@variables('メッセージ')",
+                                                "headers": {
+                                                    "Authorization": "Bearer @{body('チャネルアクセストークン発行のレスポンス（JSON）の解析')?['access_token']}",
+                                                    "Content-Type": "application/json"
+                                                },
+                                                "method": "POST",
+                                                "uri": "https://api.line.me/v2/bot/message/reply"
+                                            },
+                                            "runAfter": {
+                                                "スイッチ": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "Http"
+                                        },
+                                        "スイッチ": {
+                                            "cases": {
+                                                "ケース：スタンプ": {
+                                                    "actions": {
+                                                        "メッセージの設定（スタンプ）": {
+                                                            "inputs": {
+                                                                "name": "メッセージ",
+                                                                "value": {
+                                                                    "messages": [
+                                                                        {
+                                                                            "packageId": "11537",
+                                                                            "stickerId": "52002734",
+                                                                            "type": "sticker"
+                                                                        }
+                                                                    ],
+                                                                    "replyToken": "@{items('For_each')?['replyToken']}"
+                                                                }
+                                                            },
+                                                            "runAfter": {},
+                                                            "type": "SetVariable"
+                                                        }
+                                                    },
+                                                    "case": "sticker"
+                                                },
+                                                "ケース：テキスト": {
+                                                    "actions": {
+                                                        "メッセージの設定（テキスト）": {
+                                                            "inputs": {
+                                                                "name": "メッセージ",
+                                                                "value": {
+                                                                    "messages": [
+                                                                        {
+                                                                            "text": "@{items('For_each')?['message']?['text']}",
+                                                                            "type": "text"
+                                                                        }
+                                                                    ],
+                                                                    "replyToken": "@{items('For_each')?['replyToken']}"
+                                                                }
+                                                            },
+                                                            "runAfter": {},
+                                                            "type": "SetVariable"
+                                                        }
+                                                    },
+                                                    "case": "text"
                                                 }
-                                            ],
-                                            "replyToken": "@{items('For_each')?['replyToken']}"
-                                        },
-                                        "headers": {
-                                            "Authorization": "Bearer @{body('チャネルアクセストークン発行のレスポンス（JSON）の解析')?['access_token']}",
-                                            "Content-Type": "application/json"
-                                        },
-                                        "method": "POST",
-                                        "uri": "https://api.line.me/v2/bot/message/reply"
+                                            },
+                                            "default": {
+                                                "actions": {
+                                                    "メッセージの設定（エラーメッセージ）": {
+                                                        "inputs": {
+                                                            "name": "メッセージ",
+                                                            "value": {
+                                                                "messages": [
+                                                                    {
+                                                                        "text": "そのメッセージ形式は対応していません。",
+                                                                        "type": "text"
+                                                                    }
+                                                                ],
+                                                                "replyToken": "@{items('For_each')?['replyToken']}"
+                                                            }
+                                                        },
+                                                        "runAfter": {},
+                                                        "type": "SetVariable"
+                                                    }
+                                                }
+                                            },
+                                            "expression": "@items('For_each')?['message']?['type']",
+                                            "runAfter": {},
+                                            "type": "Switch"
+                                        }
+                                    },
+                                    "expression": {
+                                        "and": [
+                                            {
+                                                "equals": [
+                                                    "@items('For_each')?['type']",
+                                                    "message"
+                                                ]
+                                            }
+                                        ]
                                     },
                                     "runAfter": {},
-                                    "type": "Http"
+                                    "type": "If"
                                 }
                             },
                             "foreach": "@triggerBody()?['events']",
                             "runAfter": {
-                                "チャネルアクセストークン発行のレスポンス（JSON）の解析": [
+                                "変数を初期化する": [
                                     "Succeeded"
                                 ]
                             },
@@ -94,6 +176,22 @@
                             },
                             "type": "ParseJson"
                         },
+                        "変数を初期化する": {
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "メッセージ",
+                                        "type": "object"
+                                    }
+                                ]
+                            },
+                            "runAfter": {
+                                "チャネルアクセストークン発行のレスポンス（JSON）の解析": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable"
+                        },
                         "応答": {
                             "inputs": {
                                 "statusCode": 200
@@ -127,8 +225,61 @@
                                                 "properties": {
                                                     "message": {
                                                         "properties": {
+                                                            "emojis": {
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "emojiId": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "index": {
+                                                                            "type": "integer"
+                                                                        },
+                                                                        "length": {
+                                                                            "type": "integer"
+                                                                        },
+                                                                        "productId": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "index",
+                                                                        "length",
+                                                                        "productId",
+                                                                        "emojiId"
+                                                                    ],
+                                                                    "type": "object"
+                                                                },
+                                                                "type": "array"
+                                                            },
                                                             "id": {
                                                                 "type": "string"
+                                                            },
+                                                            "mention": {
+                                                                "properties": {
+                                                                    "mentionees": {
+                                                                        "items": {
+                                                                            "properties": {
+                                                                                "index": {
+                                                                                    "type": "integer"
+                                                                                },
+                                                                                "length": {
+                                                                                    "type": "integer"
+                                                                                },
+                                                                                "userId": {
+                                                                                    "type": "string"
+                                                                                }
+                                                                            },
+                                                                            "required": [
+                                                                                "index",
+                                                                                "length",
+                                                                                "userId"
+                                                                            ],
+                                                                            "type": "object"
+                                                                        },
+                                                                        "type": "array"
+                                                                    }
+                                                                },
+                                                                "type": "object"
                                                             },
                                                             "text": {
                                                                 "type": "string"
@@ -163,6 +314,14 @@
                                                         "type": "string"
                                                     }
                                                 },
+                                                "required": [
+                                                    "replyToken",
+                                                    "type",
+                                                    "mode",
+                                                    "timestamp",
+                                                    "source",
+                                                    "message"
+                                                ],
                                                 "type": "object"
                                             },
                                             "type": "array"
