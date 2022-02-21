@@ -16,7 +16,9 @@ LINE Bot 用バックエンドを作成するための Azure Logic App をデプ
 ## リプライ
 ### テキストのオウム返し
 
-ユーザーから送られたテキスト内容をそのまま返信するシンプルなオウム返しです（スタンプ・画像等の他のメッセージ形式に対する応答は非対応）。
+ユーザーから送られたテキスト内容をそのまま返信するオウム返しです。また、スタンプが送られた場合は固定のスタンプを返します。
+
+メッセージイベントのみに反応させるための制御（条件）、メッセージ種別ごとに処理を分けるための制御（スイッチ）をフローに含みます。
 
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fhimanago%2Fazure-logicapp-linebot-templates%2Fmaster%2Ftemplates%2Freply-echo-text.json" target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png"/>
